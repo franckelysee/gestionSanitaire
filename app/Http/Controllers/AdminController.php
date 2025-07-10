@@ -349,7 +349,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'district_id' => 'required|exists:districts,id',
-            'coordinates' => 'required|json',
+            'coordinates' => 'required|string',
             'capacity_liters' => 'required|integer|min:100|max:10000',
             'zone_type' => 'required|in:residential,commercial,industrial,public',
             'priority_level' => 'required|in:low,medium,high',
@@ -358,6 +358,11 @@ class AdminController extends Controller
         ]);
 
         $coordinates = json_decode($validated['coordinates'], true);
+
+        // Vérifier que le JSON est valide
+        if (!$coordinates || !isset($coordinates['lat']) || !isset($coordinates['lng'])) {
+            return redirect()->back()->withErrors(['coordinates' => 'Coordonnées invalides']);
+        }
 
         $zone = WasteCollectionZone::create([
             'name' => $validated['name'],
@@ -384,7 +389,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'district_id' => 'required|exists:districts,id',
-            'coordinates' => 'required|json',
+            'coordinates' => 'required|string',
             'capacity_liters' => 'required|integer|min:100|max:10000',
             'zone_type' => 'required|in:residential,commercial,industrial,public',
             'priority_level' => 'required|in:low,medium,high',
@@ -393,6 +398,11 @@ class AdminController extends Controller
         ]);
 
         $coordinates = json_decode($validated['coordinates'], true);
+
+        // Vérifier que le JSON est valide
+        if (!$coordinates || !isset($coordinates['lat']) || !isset($coordinates['lng'])) {
+            return redirect()->back()->withErrors(['coordinates' => 'Coordonnées invalides']);
+        }
 
         $zone->update([
             'name' => $validated['name'],
@@ -505,13 +515,16 @@ class AdminController extends Controller
             }
         }
 
-        // Enregistrer l'action dans l'historique
+        // Enregistrer l'action dans l'historique (si la table existe)
+        // Note: Cette fonctionnalité nécessite la création de la table report_actions
+        /*
         $report->actions()->create([
             'user_id' => Auth::id(),
             'action_type' => $validated['action'],
             'description' => $validated['admin_comment'] ?: "Signalement {$validated['action']}",
             'performed_at' => now(),
         ]);
+        */
 
         $message = match($validated['action']) {
             'verify' => 'Signalement vérifié avec succès.',

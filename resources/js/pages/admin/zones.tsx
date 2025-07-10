@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin-layout';
 import { EcoCard, EcoCardContent, EcoCardHeader, EcoCardTitle } from '@/components/ui/eco-card';
 import { EcoButton } from '@/components/ui/eco-button';
@@ -84,8 +84,12 @@ export default function ZonesPage({ zones, districts }: ZonesPageProps) {
     };
 
     const handleToggleStatus = (zone: Zone) => {
-        // Logique pour activer/désactiver une zone
-        console.log('Toggle status for zone:', zone.id);
+        // Utiliser Inertia pour faire la requête PATCH
+        router.patch(`/admin/zones/${zone.id}/toggle`, {}, {
+            onSuccess: () => {
+                handleModalSuccess();
+            },
+        });
     };
 
     const handleModalSuccess = () => {

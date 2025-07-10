@@ -57,7 +57,8 @@ export default function ZoneFormModal({
     const { data, setData, post, put, processing, errors, reset } = useForm({
         name: zone?.name || '',
         district_id: zone?.district_id || '',
-        coordinates: zone?.coordinates || { lat: 3.848, lng: 11.502 }, // Yaoundé par défaut
+        coordinates_lat: zone?.coordinates?.lat || 3.848,
+        coordinates_lng: zone?.coordinates?.lng || 11.502,
         capacity_liters: zone?.capacity_liters || 1000,
         zone_type: zone?.zone_type || 'residential',
         priority_level: zone?.priority_level || 'medium',
@@ -67,14 +68,19 @@ export default function ZoneFormModal({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
+        // Préparer les données avec les coordonnées combinées
         const submitData = {
             ...data,
-            coordinates: JSON.stringify(data.coordinates),
+            coordinates: JSON.stringify({
+                lat: data.coordinates_lat,
+                lng: data.coordinates_lng
+            })
         };
 
         if (zone?.id) {
             put(`/admin/zones/${zone.id}`, {
+                ...submitData,
                 onSuccess: () => {
                     onSuccess?.();
                     onClose();
@@ -83,6 +89,7 @@ export default function ZoneFormModal({
             });
         } else {
             post('/admin/zones', {
+                ...submitData,
                 onSuccess: () => {
                     onSuccess?.();
                     onClose();
@@ -93,7 +100,8 @@ export default function ZoneFormModal({
     };
 
     const handleMapClick = (lat: number, lng: number) => {
-        setData('coordinates', { lat, lng });
+        setData('coordinates_lat', lat);
+        setData('coordinates_lng', lng);
         setIsMapOpen(false);
     };
 
@@ -167,22 +175,16 @@ export default function ZoneFormModal({
                                     placeholder="Latitude"
                                     type="number"
                                     step="any"
-                                    value={data.coordinates.lat}
-                                    onChange={(e) => setData('coordinates', {
-                                        ...data.coordinates,
-                                        lat: parseFloat(e.target.value)
-                                    })}
+                                    value={data.coordinates_lat}
+                                    onChange={(e) => setData('coordinates_lat', parseFloat(e.target.value))}
                                     className="flex-1"
                                 />
                                 <EcoInput
                                     placeholder="Longitude"
                                     type="number"
                                     step="any"
-                                    value={data.coordinates.lng}
-                                    onChange={(e) => setData('coordinates', {
-                                        ...data.coordinates,
-                                        lng: parseFloat(e.target.value)
-                                    })}
+                                    value={data.coordinates_lng}
+                                    onChange={(e) => setData('coordinates_lng', parseFloat(e.target.value))}
                                     className="flex-1"
                                 />
                                 <EcoButton 
@@ -195,8 +197,8 @@ export default function ZoneFormModal({
                                     Carte
                                 </EcoButton>
                             </div>
-                            {errors.coordinates && (
-                                <p className="text-red-500 text-sm mt-1">{errors.coordinates}</p>
+                            {(errors.coordinates_lat || errors.coordinates_lng) && (
+                                <p className="text-red-500 text-sm mt-1">Coordonnées invalides</p>
                             )}
                         </div>
 
@@ -323,7 +325,7 @@ export default function ZoneFormModal({
                                     <MapPin size={48} className="mx-auto text-gray-400 mb-2" />
                                     <p className="text-gray-600">Carte interactive à implémenter</p>
                                     <p className="text-sm text-gray-500">
-                                        Position actuelle: {data.coordinates.lat.toFixed(6)}, {data.coordinates.lng.toFixed(6)}
+                                        Position actuelle: {data.coordinates_lat.toFixed(6)}, {data.coordinates_lng.toFixed(6)}
                                     </p>
                                 </div>
                             </div>

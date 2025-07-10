@@ -411,7 +411,17 @@ export default function UsersPage({ users, districts }: UsersPageProps) {
                     setIsEditModalOpen(false);
                     setUserToEdit(null);
                 }}
-                user={userToEdit}
+                user={userToEdit ? {
+                    id: userToEdit.id,
+                    name: userToEdit.name,
+                    email: userToEdit.email,
+                    phone: userToEdit.phone,
+                    role: userToEdit.role,
+                    district_id: userToEdit.district?.id,
+                    is_active: userToEdit.is_active,
+                    points: userToEdit.points,
+                    level: userToEdit.level,
+                } : undefined}
                 districts={districts || []}
                 onSuccess={handleModalSuccess}
             />

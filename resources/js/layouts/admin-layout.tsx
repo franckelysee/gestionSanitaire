@@ -73,12 +73,12 @@ export default function AdminLayout({
             icon: Calendar,
             active: window.location.pathname === '/admin/schedules',
         },
-        {
-            name: 'Rapports',
-            href: '/admin/reports-export',
-            icon: FileText,
-            active: window.location.pathname === '/admin/reports-export',
-        },
+        // {
+        //     name: 'Rapports',
+        //     href: '/admin/reports-export',
+        //     icon: FileText,
+        //     active: window.location.pathname === '/admin/reports-export',
+        // },
         {
             name: 'Paramètres',
             href: '/admin/settings',
