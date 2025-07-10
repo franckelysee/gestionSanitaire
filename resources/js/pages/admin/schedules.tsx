@@ -457,6 +457,71 @@ export default function SchedulesPage({ schedules, available_zones, teams, vehic
                     </EcoCardContent>
                 </EcoCard>
             </div>
+
+            {/* Modals */}
+            <ScheduleFormModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                zones={available_zones.map(z => ({
+                    id: z.id,
+                    name: z.name,
+                    district: z.district,
+                    priority_level: z.priority
+                }))}
+                teams={teams.map(t => ({
+                    id: t.id,
+                    name: t.driver,
+                    members_count: t.collectors.length + 1
+                }))}
+                vehicles={vehicles.map(v => ({
+                    id: v.id,
+                    name: v.plate,
+                    capacity: v.capacity,
+                    is_available: v.status === 'available'
+                }))}
+                onSuccess={handleModalSuccess}
+            />
+
+            <ScheduleFormModal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setScheduleToEdit(null);
+                }}
+                schedule={scheduleToEdit}
+                zones={available_zones.map(z => ({
+                    id: z.id,
+                    name: z.name,
+                    district: z.district,
+                    priority_level: z.priority
+                }))}
+                teams={teams.map(t => ({
+                    id: t.id,
+                    name: t.driver,
+                    members_count: t.collectors.length + 1
+                }))}
+                vehicles={vehicles.map(v => ({
+                    id: v.id,
+                    name: v.plate,
+                    capacity: v.capacity,
+                    is_available: v.status === 'available'
+                }))}
+                onSuccess={handleModalSuccess}
+            />
+
+            <DeleteConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => {
+                    setIsDeleteModalOpen(false);
+                    setScheduleToDelete(null);
+                }}
+                title="Supprimer la Tournée"
+                message="Êtes-vous sûr de vouloir supprimer cette tournée ?"
+                itemName={scheduleToDelete?.name || ''}
+                deleteUrl={`/admin/schedules/${scheduleToDelete?.id}`}
+                onSuccess={handleModalSuccess}
+                warningMessage="Cette action est irréversible. La tournée sera définitivement supprimée."
+            />
         </AdminLayout>
     );
 }

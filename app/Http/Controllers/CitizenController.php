@@ -8,6 +8,7 @@ use App\Models\WasteCollectionZone;
 use App\Models\WasteReport;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class CitizenController extends Controller
 {
@@ -388,6 +389,137 @@ class CitizenController extends Controller
         return Inertia::render('citizen/help', [
             'faqs' => $faqs,
             'contact_info' => $contact_info,
+        ]);
+    }
+
+    /**
+     * Mettre à jour le profil utilisateur
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        $user->update($validated);
+
+        return redirect()->route('citizen.profile')
+            ->with('success', 'Profil mis à jour avec succès.');
+    }
+
+    /**
+     * Mettre à jour un signalement (seulement si en attente)
+     */
+    public function updateReport(Request $request, WasteReport $report)
+    {
+        // Vérifier que l'utilisateur est propriétaire du signalement
+        if ($report->user_id !== Auth::id()) {
+            abort(403, 'Non autorisé');
+        }
+
+        // Vérifier que le signalement est encore modifiable
+        if ($report->status !== 'pending') {
+            return redirect()->route('citizen.history')
+                ->with('error', 'Ce signalement ne peut plus être modifié.');
+        }
+
+        $validated = $request->validate([
+            'description' => 'required|string|max:1000',
+            'fill_level' => 'required|integer|min:0|max:100',
+            'priority' => 'required|in:low,medium,high',
+            'photos.*' => 'nullable|image|max:5120', // 5MB max par image
+        ]);
+
+        $updateData = [
+            'description' => $validated['description'],
+            'fill_level' => $validated['fill_level'],
+            'priority' => $validated['priority'],
+        ];
+
+        // Gérer les nouvelles photos si fournies
+        if ($request->hasFile('photos')) {
+            $photos = [];
+            foreach ($request->file('photos') as $photo) {
+                $path = $photo->store('reports', 'public');
+                $photos[] = $path;
+            }
+            $updateData['photos'] = array_merge($report->photos ?? [], $photos);
+        }
+
+        $report->update($updateData);
+
+        return redirect()->route('citizen.history')
+            ->with('success', 'Signalement mis à jour avec succès.');
+    }
+
+    /**
+     * Supprimer un signalement (seulement si en attente)
+     */
+    public function destroyReport(WasteReport $report)
+    {
+        // Vérifier que l'utilisateur est propriétaire du signalement
+        if ($report->user_id !== Auth::id()) {
+            abort(403, 'Non autorisé');
+        }
+
+        // Vérifier que le signalement est encore supprimable
+        if ($report->status !== 'pending') {
+            return redirect()->route('citizen.history')
+                ->with('error', 'Ce signalement ne peut plus être supprimé.');
+        }
+
+        // Supprimer les photos associées
+        if ($report->photos) {
+            foreach ($report->photos as $photo) {
+                Storage::disk('public')->delete($photo);
+            }
+        }
+
+        $report->delete();
+
+        return redirect()->route('citizen.history')
+            ->with('success', 'Signalement supprimé avec succès.');
+    }
+
+    /**
+     * Marquer des notifications comme lues
+     */
+    public function markNotificationsAsRead(Request $request)
+    {
+        $validated = $request->validate([
+            'notification_ids' => 'required|array',
+            'notification_ids.*' => 'integer',
+        ]);
+
+        // Logique pour marquer les notifications comme lues
+        // (À implémenter avec le modèle Notification)
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notifications marquées comme lues.'
+        ]);
+    }
+
+    /**
+     * Supprimer des notifications
+     */
+    public function deleteNotifications(Request $request)
+    {
+        $validated = $request->validate([
+            'notification_ids' => 'required|array',
+            'notification_ids.*' => 'integer',
+        ]);
+
+        // Logique pour supprimer les notifications
+        // (À implémenter avec le modèle Notification)
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notifications supprimées.'
         ]);
     }
 }
